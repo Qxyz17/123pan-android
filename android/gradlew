@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Gradle wrapper for Unix - 123panNextGen Android
+
+DIRNAME=$(dirname "$0")
+APP_BASE_NAME=$(basename "$0")
+GRADLE_HOME="$DIRNAME/gradle/wrapper/gradle-wrapper.jar"
+
+if [ -f "$GRADLE_HOME" ]; then
+    exec java -jar "$GRADLE_HOME" "$@"
+else
+    echo "Gradle wrapper JAR not found at $GRADLE_HOME"
+    echo ""
+    echo "Options:"
+    echo "  1. Download the Gradle wrapper:"
+    echo "     cd \"$DIRNAME\""
+    echo "     gradle wrapper --gradle-version 8.5"
+    echo ""
+    echo "  2. Or build directly with installed Gradle:"
+    echo "     cd \"$DIRNAME\""
+    echo "     gradle assembleDebug"
+    echo ""
+    echo "  3. Or use Android Studio (recommended):"
+    echo "     Open the android folder in Android Studio and build from there."
+    exit 1
+fi

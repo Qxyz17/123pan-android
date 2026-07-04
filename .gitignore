@@ -22,3 +22,28 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Android / Java
+*.iml
+.gradle/
+/local.properties
+/.idea/
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Python (original project removed)
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">123panNextGen Android</string>
+    <string name="login_title">欢迎使用123云盘</string>
+    <string name="username_hint">选择或输入账户</string>
+    <string name="password_hint">请输入密码</string>
+    <string name="login_button">登录</string>
+    <string name="cancel_button">取消</string>
+    <string name="tab_files">文件</string>
+    <string name="tab_transfer">传输</string>
+    <string name="tab_settings">设置</string>
+    <string name="tab_cloud">云盘</string>
+    <string name="tab_home">首页</string>
+</resources>

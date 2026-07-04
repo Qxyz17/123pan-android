@@ -1,0 +1,146 @@
+name: Build & Release 123pan
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (例如: v3.0.3)"
+        required: true
+        type: string
+      prerelease:
+        description: "是否为预发布版本"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-2025-vs2026, ubuntu-24.04]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group build --group lint
+    
+      
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-cursor0 \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xfixes0 \
+            libxcb-xinerama0 \
+            zip \
+            upx \
+            clang \
+            ccache
+
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install upx -y
+
+      - name: Build with Nuitka
+        run: |
+          bash script/build.sh
+        shell: bash
+
+      - name: Package Windows build
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path 123pan.exe `
+            -DestinationPath 123pan-windows.zip `
+            -Force
+
+      - name: Package Linux build
+        if: runner.os == 'Linux'
+        run: |
+          zip -9 123pan-linux.zip 123pan
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: 123pan-windows
+          path: 123pan-windows.zip
+
+      - name: Upload Linux artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: 123pan-linux
+          path: 123pan-linux.zip
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: 123pan-windows
+          path: ./artifacts/windows
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: 123pan-linux
+          path: ./artifacts/linux
+
+      - name: Set version for manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Set version for push trigger
+        if: github.event_name == 'push'
+        run: |
+          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          files: |
+            ./artifacts/windows/123pan-windows.zip
+            ./artifacts/linux/123pan-linux.zip
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          generate_release_notes: false
